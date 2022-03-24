@@ -33,7 +33,8 @@ const userDatabase = {
 app.use(bodyParser.urlencoded({extended: true}), cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 
-// tiny function
+// basic functions
+
 function generateRandomString () {
   let a = "abcdefghijklmnopqrsztuvwyz0123456789";
   let result = "";
@@ -43,6 +44,15 @@ function generateRandomString () {
   }
 
   return result;
+};
+
+function checkEmail () {
+  for (const user in userDatabase) {
+    if (userDatabase[user].email === email) {
+      return true;
+    }
+  }
+  return false;
 }
 
 //
@@ -82,6 +92,11 @@ app.post("/register", (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   userDatabase[shortUsername] = { id: shortUsername, email: userEmail, password: userPassword }
+  
+  if (userEmail === " " || userPassword === " " || userEmail === emailCheck(userEmail)) {
+    return res.sendStatus(400);
+  }
+  
   res.cookie("user_id", userDatabase[shortUsername]);
   res.redirect("/urls");
   console.log(userDatabase[shortUsername])
