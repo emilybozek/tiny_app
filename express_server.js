@@ -68,7 +68,7 @@ const urlsForUser = function (id) {
 
 // home page
 app.get("/", (req, res) => {
-  // if user is logged in redirect to urls, if not redirect to login
+  res.send("hello")
 })
 
 // URL page
@@ -169,7 +169,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// handler
+// redirect handler -> ex. http://localhost:8080/u/b2xVn2 to http://www.lighthouselabs.ca.
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
     return res.send("Short URL does not exist!");
