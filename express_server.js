@@ -1,7 +1,8 @@
 const express = require("express");
 const PORT = 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 
@@ -9,8 +10,15 @@ app.set("view engine", "ejs");
 
 // MIDDLEWARE
 
-app.use(bodyParser.urlencoded({extended: true}), cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieSession({
+  name: "session",
+  keys: ["password", "key", "LHL"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -86,9 +94,11 @@ app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) {
     return res.send("Error: not a valid user\n");
   } 
-
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies["user_id"].id }
+  urlDatabase[shortURL] = { 
+    longURL: req.body.longURL, 
+    userID: req.cookies["user_id"].id 
+  };
   res.redirect(`/urls/${shortURL}`)
 });
 
@@ -171,12 +181,10 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // redirect handler -> ex. http://localhost:8080/u/b2xVn2 to http://www.lighthouselabs.ca.
 app.get("/u/:shortURL", (req, res) => {
-  if (!urlDatabase[req.params.shortURL]) {
-    return res.send("Short URL does not exist!");
-  }
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
-});
+    let shortUrl = req.params.shortURL;
+    let longUrl = urlDatabase[shortUrl].longURL;
+    res.redirect(longUrl);
+  });
 
 // url delete handler
 app.post("/urls/:shortURL/delete", (req, res) => {
