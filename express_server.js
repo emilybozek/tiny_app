@@ -35,7 +35,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 // basic functions
 
-function generateRandomString () {
+const generateRandomString = function () {
   let a = "abcdefghijklmnopqrsztuvwyz0123456789";
   let result = "";
 
@@ -46,7 +46,7 @@ function generateRandomString () {
   return result;
 };
 
-function checkEmail () {
+const emailExists = function (email) {
   for (const user in userDatabase) {
     if (userDatabase[user].email === email) {
       return true;
@@ -63,7 +63,7 @@ function checkEmail () {
 
 // URL page
 app.get("/urls", (req, res) => {
-  const templateVars = { username: req.cookies["user_id"], urls: urlDatabase };
+  const templateVars = { user_id: req.cookies["user_id"], urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
@@ -82,7 +82,7 @@ app.get("/register", (req, res) => {
 
 // new tiny URL page
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["user_id"] };
+  const templateVars = { user_id: req.cookies["user_id"] };
   res.render("urls_new", templateVars);
 });
 
@@ -93,7 +93,7 @@ app.post("/register", (req, res) => {
   let userPassword = req.body.password;
   userDatabase[shortUsername] = { id: shortUsername, email: userEmail, password: userPassword }
   
-  if (userEmail === " " || userPassword === " " || userEmail === emailCheck(userEmail)) {
+  if (userEmail === " " || userPassword === " " || userEmail === emailExists(userEmail)) {
     return res.sendStatus(400);
   }
   
@@ -102,12 +102,27 @@ app.post("/register", (req, res) => {
   console.log(userDatabase[shortUsername])
 })
 
+//login page 
+app.get("/login", (req, res) => {
+  const templateVars = { user_id: req.cookies["user_id"] };
+  res.render("login", templateVars);
+})
+
 // login handler 
 app.post("/login", (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
-  res.cookie("user_id", username);
-  res.redirect(`/urls`);
+
+  if (emailExists(userEmail)) {
+    for (const user in userDatabase) {
+      if (userDatabase[user].password === userPassword && userDatabase[user].email === userEmail) {
+        res.cookie("user_id", userDatabase[user]);
+        res.redirect("/urls");
+        return;
+      }
+    }
+  }
+  return res.sendStatus(403);
 })
 
 // logout handler
