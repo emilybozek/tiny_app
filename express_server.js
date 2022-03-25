@@ -23,11 +23,11 @@ app.use(cookieSession({
 const urlDatabase = {
   b6UTxQ: {
         longURL: "https://www.tsn.ca",
-        userID: "aJ48lW"
+        userID: "admin"
     },
     i3BoGr: {
         longURL: "https://www.google.ca",
-        userID: "aJ48lW"
+        userID: "admin"
     }
 };
 
@@ -35,15 +35,25 @@ const users = {
   "admin": {
     id: "admin", 
     email: "admin@example.com", 
-    hashedPassword: bcrypt.hashSync("test")
+    hashedPassword: "test",
   }
 };
 
 // Helper Functions
-const generateRandomString = function () {
+class User {
+
+  constructor(id, email, hashedPassword) {
+    this.id = id;
+    this.email = email;
+    this.hashedPassword = hashedPassword;
+  }
+
+}
+
+const generateRandomString = function(length) {
   let charset = "abcdefghijklmnopqrsztuvwyz0123456789";
   let string = "";
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < length; i++) {
     string += charset[Math.floor(Math.random() * charset.length)]
   }
   return string;
@@ -59,14 +69,15 @@ const getUserByEmail = function (email, users) {
   return null;
 };
 
-const urlsForUser = function (id, urlDatabase) {
-  let list = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      list[shortURL] = urlDatabase[shortURL];
+const urlsForUser = function(id, urlDatabase) {
+  const result = {};
+  for (let shortURL in urlDatabase) {
+    let url = urlDatabase[shortURL];
+    if (url.userID === id) {
+      result[shortURL] = url;
     }
   }
-  return list;
+  return result;
 };
 
 const notLoggedIn = function (user) {
@@ -76,34 +87,16 @@ const notLoggedIn = function (user) {
   return false;
 };
 
-class User {
-
-  constructor(id, email, hashedPassword) {
-    this.id = id;
-    this.email = email;
-    this.hashedPassword = hashedPassword;
-  }
-
-}
-
-class ShortURL {
-
-  constructor(longURL, userID) {
-    this.longURL = longURL;
-    this.userID = userID;
-  }
-
-}
 
 // ROUTES
 
 // Homepage
 app.get("/", (req, res) => {
   const user = users[req.session.userID]
-  if (user) {
-    return res.redirect("/urls");
+  if (otLoggedIn(user)) {
+    return res.redirect("/login");
   }
-  return res.redirect("/login")
+  return res.redirect("/urls")
 });
 
 // Registration 
@@ -118,18 +111,18 @@ app.get("/register", (req, res) => {
 })
 
 app.post("/register", (req, res) => {
+  const user = users[req.session.userID];
   const { email, password } = req.body;
   if (email === "" || password === "") {
     return res.sendStatus(400);
   }
-  const user = getUserByEmail(email, users);
-  if (user) {
+  if (getUserByEmail(email, users)) {
     return res.sendStatus(400);
   }
   const userID = generateRandomString(4);
   const hashedPassword = bcrypt.hashSync(password);
-  const newUser = new User(userID, email, hashedPassword);
-  users[userID] = newUser;
+  users[userID] = new User(userID, email, hashedPassword);
+  req.session.userID = userID;
   req.session.userID = userID;
   res.redirect("/urls");
 })
@@ -157,7 +150,7 @@ app.post("/login", (req, res) => {
   }
   req.session.userID = user.id
   res.redirect("/urls");
-})
+});
 
 // Logout
 app.post("/logout", (req, res) => {
@@ -168,9 +161,9 @@ app.post("/logout", (req, res) => {
 //
 app.get("/urls", (req, res) => {
   const user = users[req.session.userID];
-  if (notLoggedIn(user)) {
-       return res.send("Not logged in")
-  }
+  // if (notLoggedIn(user)) {
+  //      return res.send("Not -logged in")
+  // }
   const urlList = urlsForUser(user.id, urlDatabase);
   const templateVars = {
     user,
@@ -202,9 +195,9 @@ app.get("/urls/new", (req, res) => {
 //
 app.post("/urls", (req, res) => {
   const user = users[req.session.userID];
-  // if (notLoggedIn(user)) {
-  //   return res.send("Not logged in");
-  // } 
+  if (notLoggedIn(user)) {
+    return res.send("Not logged in");
+    } 
   const shortURL = generateRandomString(6);
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = new ShortURL(longURL, user.id);
