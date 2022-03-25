@@ -22,12 +22,19 @@
         </tr>
       </thead>
       <tbody>
-        <% for(let url in urls) { %>
+        <% for(let shortUrl in urlList) { %>
           <tr>
-            <td><%= url %></td>
-            <td><%= urls[url].longURL %></td>
-            <td><form method="POST" action="/urls/<%= url %>/delete"><button type="delete" class="btn btn-outline-danger">Delete</button></form></td>
-            <td><a href="/urls/<%= url %>">Edit</a></td>
+            <td><%= shortUrl %></td>
+            <td><%= urlList[shortUrl].longURL %></td>
+            <td>
+              <form method="GET" action="/urls/<%= shortUrl %>">
+                <button type="submit" class="btn btn-outline-primary">Edit</button>
+              </form>
+            </td>
+            <td>
+              <form method="POST" action="/urls/<%= shortUrl %>/delete">
+                <button type="submit" class="btn btn-outline-danger">Delete</button>
+              </form></td>
           </tr>
         <% } %>
       </tbody>
