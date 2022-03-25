@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const { generateRandomString, urlsForUser, getUserByEmail } = require("./helper-functions.js");
 
 const PORT = 8080;
 const app = express();
@@ -13,87 +14,23 @@ app.set("view engine", "ejs");
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
-  name: "userID",
+  name: "session",
   keys: ["password", "key", "LHL"],
 
   maxAge: 24 * 60 * 60 * 1000 
 }));
 
 // Database
-const urlDatabase = {
-  b6UTxQ: {
-        longURL: "https://www.tsn.ca",
-        userID: "admin"
-    },
-    i3BoGr: {
-        longURL: "https://www.google.ca",
-        userID: "admin"
-    }
-};
+const urlDatabase = {};
 
-const users = { 
-  "admin": {
-    id: "admin", 
-    email: "admin@example.com", 
-    hashedPassword: "test",
-  }
-};
-
-// Helper Functions
-class User {
-
-  constructor(id, email, hashedPassword) {
-    this.id = id;
-    this.email = email;
-    this.hashedPassword = hashedPassword;
-  }
-
-}
-
-const generateRandomString = function(length) {
-  let charset = "abcdefghijklmnopqrsztuvwyz0123456789";
-  let string = "";
-  for (let i = 0; i < length; i++) {
-    string += charset[Math.floor(Math.random() * charset.length)]
-  }
-  return string;
-};
-
-const getUserByEmail = function (email, users) {
-  const members = Object.values(users);
-  for (let user of members) {
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
-
-const urlsForUser = function(id, urlDatabase) {
-  const result = {};
-  for (let shortURL in urlDatabase) {
-    let url = urlDatabase[shortURL];
-    if (url.userID === id) {
-      result[shortURL] = url;
-    }
-  }
-  return result;
-};
-
-const notLoggedIn = function (user) {
-  if (!user) {
-    return true;
-  }
-  return false;
-};
-
+const users = {};
 
 // ROUTES
 
 // Homepage
 app.get("/", (req, res) => {
-  const user = users[req.session.userID]
-  if (otLoggedIn(user)) {
+  const user = users[req.session.userID];
+  if (notLoggedIn(user)) {
     return res.redirect("/login");
   }
   return res.redirect("/urls")
@@ -161,10 +98,10 @@ app.post("/logout", (req, res) => {
 //
 app.get("/urls", (req, res) => {
   const user = users[req.session.userID];
-  // if (notLoggedIn(user)) {
-  //      return res.send("Not -logged in")
-  // }
-  const urlList = urlsForUser(user.id, urlDatabase);
+  if (notLoggedIn(user)) {
+       return res.send("Not -logged in")
+  }
+  const urlList = urlsForUser(user, urlDatabase);
   const templateVars = {
     user,
     urlList
@@ -200,7 +137,7 @@ app.post("/urls", (req, res) => {
     } 
   const shortURL = generateRandomString(6);
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = new ShortURL(longURL, user.id);
+  urlDatabase[shortURL] = new shortURL(longURL, user.id);
   res.redirect(`/urls/${shortURL}`);
 });
 
