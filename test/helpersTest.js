@@ -1,6 +1,17 @@
 const { assert } = require('chai');
 
-const { getUserByEmail } = require('../helpers.js');
+const { generateRandomString, urlsForUser, getUserByEmail } = require('../helpers.js');
+
+const testUrlDatabase = {
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "userRandomID"
+  } 
+};
 
 const testUsers = {
   "userRandomID": {
@@ -19,6 +30,30 @@ describe('getUserByEmail', function() {
   it('should return a user with valid email', function() {
     const user = getUserByEmail("user@example.com", testUsers)
     const expectedUserID = "userRandomID";
-    // Write your assert statement here
+    assert.equal(user.id, expectedUserID);
+  });
+  it('returns null with non-registered email', () => {
+    const user = getUserByEmail('invalid@email.com', testUsers);
+    assert.isNull(user);
+  });
+  it('returns null with empty email', () => {
+    const user = getUserByEmail('', testUsers);
+    assert.isNull(user);
+  });
+});
+
+describe('urlsForUser', () => {
+  it('returns object with correct shortURL-longURL pairs', () => {
+    const id = 'userRandomID';
+    const urls = urlsForUser(id, testUrlDatabase);
+    const expected = { 'b2xVn2': 'http://www.lighthouselabs.ca', '9sm5xK': 'http://www.google.com' };
+    assert.deepEqual(urls, expected);
+  });
+});
+
+describe('generateRandomString', () => {
+  it('returns a string the correct length', () => {
+    const string = generateRandomString(6);
+    assert.equal(string.length, 6);
   });
 });
