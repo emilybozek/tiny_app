@@ -5,11 +5,11 @@ const { generateRandomString, urlsForUser, getUserByEmail } = require('../helper
 const testUrlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "userRandomID"
+    userID: "randomUserID"
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
-    userID: "userRandomID"
+    userID: "randomUserID"
   } 
 };
 
@@ -44,7 +44,7 @@ describe('getUserByEmail', function() {
 
 describe('urlsForUser', () => {
   it('returns object with correct shortURL-longURL pairs', () => {
-    const id = 'userRandomID';
+    const id = 'randomUserID';
     const urls = urlsForUser(id, testUrlDatabase);
     const expected = { 'b2xVn2': 'http://www.lighthouselabs.ca', '9sm5xK': 'http://www.google.com' };
     assert.deepEqual(urls, expected);

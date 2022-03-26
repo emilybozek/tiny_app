@@ -27,7 +27,6 @@ const users = {};
 
 // Homepage
 app.get("/", (req, res) => {
-  const user = users[req.session.userID];
   if (!req.session.user_id) {
     return res.redirect("/login");
   }
